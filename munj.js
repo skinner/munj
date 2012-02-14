@@ -6,13 +6,20 @@ let dirService = Cc["@mozilla.org/file/directory_service;1"]
 let ioService = Cc["@mozilla.org/network/io-service;1"]
     .getService(Ci.nsIIOService);
 
-function lines(url, charSet) {
+function lines(toRead, charSet) {
     if ('undefined' == typeof charSet) charSet = "UTF-8";
 
     let convStream = Cc["@mozilla.org/intl/converter-input-stream;1"]
         .createInstance(Ci.nsIConverterInputStream);
 
-    url = _resolve(url);
+    let url;
+    if ("string" == typeof toRead) {
+        url = _resolve(toRead);
+    } else if (toRead instanceof Ci.nsIFile) {
+        url = ioService.newFileURI(toRead);
+    } else {
+        throw new Error("lines(): couldn't handle argument: " + toRead);
+    }
 
     //TODO figure out how to get stdin
     let channel, input;
@@ -52,7 +59,7 @@ function ls(path) {
         while (entries.hasMoreElements()) {
             let entry = entries.getNext();
             entry.QueryInterface(Ci.nsIFile);
-            yield entry.leafName;
+            yield entry;
         }
     }
 }
