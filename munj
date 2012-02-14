@@ -1,0 +1,7 @@
+#!/bin/sh
+XRDIR=/usr/lib/xulrunner-2
+
+$XRDIR/run-mozilla.sh \
+    $XRDIR/xpcshell -v 180 \
+    munj.js \
+    "$1"

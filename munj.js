@@ -1,0 +1,161 @@
+let Cc = Components.classes;
+let Ci = Components.interfaces;
+
+function lines(url, charSet) {
+    if ('undefined' == typeof charSet) charSet = "UTF-8";
+    let ioService = Cc["@mozilla.org/network/io-service;1"]
+        .getService(Ci.nsIIOService);
+    let convStream = Cc["@mozilla.org/intl/converter-input-stream;1"]
+        .createInstance(Ci.nsIConverterInputStream);
+
+    let cwd = Cc["@mozilla.org/file/directory_service;1"]
+        .getService(Ci.nsIDirectoryServiceProvider)
+        .getFile("CurWorkD",{});
+    let cwdUri = ioService.newFileURI(cwd);
+    //TODO figure out how to get stdin
+    let channel = ioService.newChannel(url, null, cwdUri);
+    let input = channel.open();
+    //when could we use this?
+    //print(input.contentCharset);
+
+    try {
+        convStream.init(input, charSet, 1024, 0xFFFD);
+        convStream.QueryInterface(Ci.nsIUnicharLineInputStream);
+
+        if (convStream instanceof Ci.nsIUnicharLineInputStream) {
+            var line = {};
+            var cont;
+            do {
+                cont = convStream.readLine(line);
+                yield line.value;
+            } while (cont);
+        }
+    } finally {
+        input.close();
+    }
+}
+
+function ila(url, sep, charSet) {
+    if ("undefined" == typeof sep) sep = "\t";
+    for (let line in lines(url, charSet)) {
+        yield line.split(sep);
+    }
+}
+
+function oal(iter, sep) {
+    if ("undefined" == typeof sep) sep = "\t";
+    for (let arr in iter) {
+        if (arr instanceof Array)
+            yield (arr.join(sep));
+        else
+            yield arr;
+    }
+}
+
+function take(num, iter) {
+    while (num > 0) {
+        yield iter.next();
+        num--;
+    }
+}
+
+function drop(num, iter) {
+    while (num > 0) {
+        iter.next();
+        num--;
+    }
+    return iter;
+}
+
+function tail(num, iter) {
+    let result = [];
+    for (let elem in iter) {
+        result.push(elem);
+        if (result.length > num) result.shift();
+    }
+    return values(result);
+}
+
+function length(iter) {
+    let result = 0;
+    try {
+        while(iter.next()) {
+            result++;
+        }
+    } catch (e if e instanceof StopIteration) {
+    }
+    return result;
+}
+
+function reduce(iter, fun, init) {
+    let result = init;
+    for (let elem in iter) {
+        result = fun(result, elem);
+    }
+    return result;
+}
+
+function sum(iter) {
+    let result = 0;
+    for (let elem in iter) {
+        result += parseFloat(elem);
+    }
+    return result;
+}
+
+function product(iter) {
+    let result = 1;
+    for (let elem in iter) {
+        result *= parseFloat(elem);
+    }
+    return result;
+}
+
+function max(iter) {
+    let result = iter.next();
+    for (let elem in iter) {
+        result = Math.max(result, elem);
+    }
+    return result;
+}
+
+function min(iter) {
+    let result = iter.next();
+    for (let elem in iter) {
+        result = Math.min(result, elem);
+    }
+    return result;
+}
+
+function keys(obj) {
+    for (let x in obj) {
+        if (obj.hasOwnProperty(x))
+            yield x;
+    }
+}
+
+function values(obj) {
+    for (let x in obj) {
+        if (obj.hasOwnProperty(x))
+            yield obj[x];
+    }
+}
+
+function items(obj) {
+    for (let x in obj) {
+        if (obj.hasOwnProperty(x))
+            yield [x, obj[x]];
+    }
+}
+
+let result = eval(arguments[0]);
+if (("object" == typeof result)
+    && ("next" in result)
+    && ("function" == typeof result.next)) {
+
+    for (var elem in result) {
+        print(elem);
+    }
+} else {
+    print(result);
+}

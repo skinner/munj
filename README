@@ -1,0 +1,6 @@
+$ ./munj 'sum(l.length for (l in lines("test/delim.txt")))'
+41
+
+$ ./munj '[l[1] for (l in ila("test/delim.txt"))].join(" ")'
+b b2 b3
+
