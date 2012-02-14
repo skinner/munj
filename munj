@@ -1,7 +1,8 @@
 #!/bin/sh
 XRDIR=/usr/lib/xulrunner-2
+MUNJDIR=`dirname "$0"`
 
 $XRDIR/run-mozilla.sh \
     $XRDIR/xpcshell -v 180 \
-    munj.js \
+    "$MUNJDIR/munj.js" \
     "$1"
