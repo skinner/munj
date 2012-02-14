@@ -1,30 +1,26 @@
 let Cc = Components.classes;
 let Ci = Components.interfaces;
 
+let dirService = Cc["@mozilla.org/file/directory_service;1"]
+    .getService(Ci.nsIDirectoryServiceProvider);
+let ioService = Cc["@mozilla.org/network/io-service;1"]
+    .getService(Ci.nsIIOService);
+
 function lines(url, charSet) {
     if ('undefined' == typeof charSet) charSet = "UTF-8";
 
-    let dirService = Cc["@mozilla.org/file/directory_service;1"]
-        .getService(Ci.nsIDirectoryServiceProvider);
-    let ioService = Cc["@mozilla.org/network/io-service;1"]
-        .getService(Ci.nsIIOService);
     let convStream = Cc["@mozilla.org/intl/converter-input-stream;1"]
         .createInstance(Ci.nsIConverterInputStream);
 
-    //don't think we have a platform-independent way to get other users'
-    //home directories, so for now just hack ~ for the current user's
-    let homeDir = ioService.newFileURI(dirService.getFile("Home", {}));
-    url = url.replace(/^\s*~/, homeDir.spec);
+    url = _resolve(url);
 
-    let cwd = dirService.getFile("CurWorkD", {});
-    let cwdUri = ioService.newFileURI(cwd);
     //TODO figure out how to get stdin
-    let channel = ioService.newChannel(url, null, cwdUri);
-    var input;
+    let channel, input;
     try {
+        channel = ioService.newChannelFromURI(url);
         input = channel.open();
     } catch (e) {
-        throw new Error("unable to open url: " + url);
+        throw new Error("unable to open url: " + url.spec);
     }
     //when could we use this?
     //print(input.contentCharset);
@@ -44,6 +40,39 @@ function lines(url, charSet) {
     } finally {
         input.close();
     }
+}
+
+function ls(path) {
+    if ("undefined" == typeof path) path = ".";
+
+    let dirUri = _resolve(path);
+    let dir = dirUri.QueryInterface(Ci.nsIFileURL).file;
+    if (dir.isDirectory()) {
+        let entries = dir.directoryEntries;
+        while (entries.hasMoreElements()) {
+            let entry = entries.getNext();
+            entry.QueryInterface(Ci.nsIFile);
+            yield entry.leafName;
+        }
+    }
+}
+
+/** our custom path/url resolution function which resolves relative to
+ *  the current working directory, and does tilde expansion
+ */
+function _resolve(path) {
+    path = _expandTilde(path);
+
+    let cwd = dirService.getFile("CurWorkD", {});
+    let cwdUri = ioService.newFileURI(cwd);
+    return ioService.newURI(path, null, cwdUri);
+}
+
+function _expandTilde(url) {
+    //don't think we have a platform-independent way to get other users'
+    //home directories, so for now just hack ~ for the current user's
+    let homeDir = ioService.newFileURI(dirService.getFile("Home", {}));
+    return url.replace(/^\s*~/, homeDir.spec);
 }
 
 function ila(url, sep, charSet) {

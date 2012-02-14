@@ -25,6 +25,15 @@ $ ./munj '(l for (l in lines("test/delim.txt")) if (l.match(/b\d/)))'
 a2	b2	2	c2	d2	x2
 	b3	3	c3	d3	x3
 
+$ ./munj 'ls()'
+.git
+munj
+test
+munj.js
+munj.js~
+README
+.gitignore
+
 $ ./munj 'range(1, 6)'
 1
 2
