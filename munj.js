@@ -208,8 +208,14 @@ function isIter(obj) {
 let result = eval(arguments[0]);
 if (isIter(result)) {
     for (var elem in result) {
-        print(elem);
+        if ("string" == typeof elem)
+            print(elem)
+        else
+            print(JSON.stringify(elem));
     }
 } else {
-    print(result);
+    if ("string" == typeof result)
+        print(result)
+    else
+        print(JSON.stringify(result));
 }
