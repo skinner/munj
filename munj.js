@@ -3,18 +3,29 @@ let Ci = Components.interfaces;
 
 function lines(url, charSet) {
     if ('undefined' == typeof charSet) charSet = "UTF-8";
+
+    let dirService = Cc["@mozilla.org/file/directory_service;1"]
+        .getService(Ci.nsIDirectoryServiceProvider);
     let ioService = Cc["@mozilla.org/network/io-service;1"]
         .getService(Ci.nsIIOService);
     let convStream = Cc["@mozilla.org/intl/converter-input-stream;1"]
         .createInstance(Ci.nsIConverterInputStream);
 
-    let cwd = Cc["@mozilla.org/file/directory_service;1"]
-        .getService(Ci.nsIDirectoryServiceProvider)
-        .getFile("CurWorkD",{});
+    //don't think we have a platform-independent way to get other users'
+    //home directories, so for now just hack ~ for the current user's
+    let homeDir = ioService.newFileURI(dirService.getFile("Home", {}));
+    url = url.replace(/^\s*~/, homeDir.spec);
+
+    let cwd = dirService.getFile("CurWorkD", {});
     let cwdUri = ioService.newFileURI(cwd);
     //TODO figure out how to get stdin
     let channel = ioService.newChannel(url, null, cwdUri);
-    let input = channel.open();
+    var input;
+    try {
+        input = channel.open();
+    } catch (e) {
+        throw new Error("unable to open url: " + url);
+    }
     //when could we use this?
     //print(input.contentCharset);
 
@@ -49,6 +60,17 @@ function oal(iter, sep) {
             yield (arr.join(sep));
         else
             yield arr;
+    }
+}
+
+function range(start, end, step) {
+    if ("undefined" == typeof step) step = 1;
+    if (end >= start) {
+        for (let i = start; i < end; i += step)
+            yield i;
+    } else {
+        for (let i = start; i > end; i += step)
+            yield i;
     }
 }
 
