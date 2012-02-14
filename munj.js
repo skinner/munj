@@ -170,11 +170,14 @@ function items(obj) {
     }
 }
 
-let result = eval(arguments[0]);
-if (("object" == typeof result)
-    && ("next" in result)
-    && ("function" == typeof result.next)) {
+function isIter(obj) {
+    return ( ("object" == typeof obj)
+             && ("next" in obj)
+             && ("function" == typeof obj.next) );
+}
 
+let result = eval(arguments[0]);
+if (isIter(result)) {
     for (var elem in result) {
         print(elem);
     }
