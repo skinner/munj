@@ -212,17 +212,19 @@ function isIter(obj) {
              && ("function" == typeof obj.next) );
 }
 
-let result = eval(arguments[0]);
-if (isIter(result)) {
-    for (var elem in result) {
-        if ("string" == typeof elem)
-            print(elem)
-        else
-            print(JSON.stringify(elem));
+function output(obj) {
+    if ("string" == typeof obj) {
+        print(obj);
+    } else if (isIter(obj)) {
+        //should we do something special for nested iterators?
+        for (var elem in obj) {
+            output(elem);
+        }
+    } else if (obj instanceof Ci.nsIFile) {
+        print(obj.leafName);
+    } else {
+        print(JSON.stringify(obj));
     }
-} else {
-    if ("string" == typeof result)
-        print(result)
-    else
-        print(JSON.stringify(result));
 }
+
+output(eval(arguments[0]));
