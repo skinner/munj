@@ -62,13 +62,7 @@ function lines(toRead, charSet) {
  * @return iterator over nsIFile objects
  */
 function ls(path) {
-    let dir = _fileForPath(path);
-    if (dir.isDirectory()) {
-        for each (let entry in _ls(dir, false))
-            yield entry;
-    } else {
-        yield dir;
-    }
+    return _ls(path, false);
 }
 
 /**
@@ -76,30 +70,30 @@ function ls(path) {
  * @param path path string
  * @return iterator over nsIFile objects
  */
-function find(path) {
-    let dir = _fileForPath(path);
-    if (dir.isDirectory()) {
-        for each (let entry in _ls(dir, true))
+function lsr(path) {
+    return _ls(path, true);
+}
+
+function _ls(path, recurse) {
+    if ("undefined" == typeof path) path = ".";
+    let uri = _resolve(path);
+    let f = uri.QueryInterface(Ci.nsIFileURL).file;
+    if (f.isDirectory()) {
+        for each (let entry in _lsdir(f, recurse))
             yield entry;
     } else {
-        yield dir;
+        yield f;
     }
 }
 
-function _fileForPath(path) {
-    if ("undefined" == typeof path) path = ".";
-    let uri = _resolve(path);
-    return uri.QueryInterface(Ci.nsIFileURL).file;
-}
-
-function _ls(dir, recurse) {
+function _lsdir(dir, recurse) {
     let entries = dir.directoryEntries;
     while (entries.hasMoreElements()) {
         let entry = entries.getNext();
         entry.QueryInterface(Ci.nsIFile);
         yield entry;
         if (recurse && entry.isDirectory()) {
-            for (subEntry in _ls(entry, recurse))
+            for (subEntry in _lsdir(entry, recurse))
                 yield subEntry;
         }
     }
