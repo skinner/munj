@@ -49,20 +49,48 @@ function lines(toRead, charSet) {
     }
 }
 
+/**
+ * list the files/directories in the given path
+ */
 function ls(path) {
-    if ("undefined" == typeof path) path = ".";
-
-    let dirUri = _resolve(path);
-    let dir = dirUri.QueryInterface(Ci.nsIFileURL).file;
+    let dir = _fileForPath(path);
     if (dir.isDirectory()) {
-        let entries = dir.directoryEntries;
-        while (entries.hasMoreElements()) {
-            let entry = entries.getNext();
-            entry.QueryInterface(Ci.nsIFile);
+        for each (let entry in _ls(dir, false))
             yield entry;
-        }
+    } else {
+        yield dir;
     }
 }
+
+function find(path) {
+    let dir = _fileForPath(path);
+    if (dir.isDirectory()) {
+        for each (let entry in _ls(dir, true))
+            yield entry;
+    } else {
+        yield dir;
+    }
+}
+
+function _fileForPath(path) {
+    if ("undefined" == typeof path) path = ".";
+    let uri = _resolve(path);
+    return uri.QueryInterface(Ci.nsIFileURL).file;
+}
+
+function _ls(dir, recurse) {
+    let entries = dir.directoryEntries;
+    while (entries.hasMoreElements()) {
+        let entry = entries.getNext();
+        entry.QueryInterface(Ci.nsIFile);
+        yield entry;
+        if (recurse && entry.isDirectory()) {
+            for (subEntry in _ls(entry, recurse))
+                yield subEntry;
+        }
+    }
+}    
+    
 
 /** our custom path/url resolution function which resolves relative to
  *  the current working directory, and does tilde expansion
@@ -76,8 +104,9 @@ function _resolve(path) {
 }
 
 function _expandTilde(url) {
-    //don't think we have a platform-independent way to get other users'
-    //home directories, so for now just hack ~ for the current user's
+    //I don't think we have a platform-independent way to get other users'
+    //home directories, so for now we just hack ~ for the current user's
+    //home dir.
     let homeDir = ioService.newFileURI(dirService.getFile("Home", {}));
     return url.replace(/^\s*~/, homeDir.spec);
 }
