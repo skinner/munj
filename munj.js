@@ -6,6 +6,13 @@ let dirService = Cc["@mozilla.org/file/directory_service;1"]
 let ioService = Cc["@mozilla.org/network/io-service;1"]
     .getService(Ci.nsIIOService);
 
+/**
+ * read the given file/path line by line
+ * @param toRead a url/path string or an nsIFile
+ * @param charSet optional parameter giving the character set for the file
+ *                 (defaults to UTF-8)
+ * @return an iterator over the lines in the file
+ */
 function lines(toRead, charSet) {
     if ('undefined' == typeof charSet) charSet = "UTF-8";
 
@@ -50,7 +57,9 @@ function lines(toRead, charSet) {
 }
 
 /**
- * list the files/directories in the given path
+ * list the files/directories for the given path
+ * @param path path string
+ * @return iterator over nsIFile objects
  */
 function ls(path) {
     let dir = _fileForPath(path);
@@ -62,6 +71,11 @@ function ls(path) {
     }
 }
 
+/**
+ * recursively list the files/directories for the given path
+ * @param path path string
+ * @return iterator over nsIFile objects
+ */
 function find(path) {
     let dir = _fileForPath(path);
     if (dir.isDirectory()) {
@@ -111,6 +125,14 @@ function _expandTilde(url) {
     return url.replace(/^\s*~/, homeDir.spec);
 }
 
+/**
+ * short for "input lines->arrays"; iterates over the lines of the input,
+ * splitting each line into an array by the given separator
+ * @param url url/path string for the input to read
+ * @param sep string or regex separator to use to split the input lines
+ * @param charSet optional parameter identifying the input character set
+ * @return an iterator that gives an array for each line in the input file
+ */
 function ila(url, sep, charSet) {
     if ("undefined" == typeof sep) sep = "\t";
     for (let line in lines(url, charSet)) {
@@ -118,6 +140,15 @@ function ila(url, sep, charSet) {
     }
 }
 
+/**
+ * short for "output arrays->lines"; given an iterator over arrays, returns
+ * an iterator.  for each input array, yields a string of the array
+ * joined by the given separator
+ * @param iterator iterator yielding arrays (if it's not an array, this
+ *                 function just yields it untouched)
+ * @param sep string to use to join the input arrays
+ * @return iterator yielding a string for each array from the input iterator
+ */
 function oal(iter, sep) {
     if ("undefined" == typeof sep) sep = "\t";
     for (let arr in iter) {
@@ -128,6 +159,21 @@ function oal(iter, sep) {
     }
 }
 
+/**
+ * iterates over a numeric range; iteration is finite if:
+ *     (start < end) && (step > 0)
+ *     or
+ *     (start > end) && (step < 0)
+ * otherwise, iterates until hitting some kind of numeric representation limit,
+ * I imagine.  Or possibly forever.
+ * The iterator returned by this function will not include the end number
+ * (i.e., the range is half-open).
+ * @param start starting number for the range
+ * @param end ending number for the range (the iteration will stop just before
+ *            returning this number)
+ * @param step optional parameter giving the size of each step in the iteration
+ * @return iterator over numbers in the range
+ */
 function range(start, end, step) {
     if ("undefined" == typeof step) step = 1;
     if (end >= start) {
@@ -139,6 +185,12 @@ function range(start, end, step) {
     }
 }
 
+/**
+ * iterate over the first num items from the given iterator
+ * @param num number of items to take
+ * @param iter source iterator for items
+ * @return iterator yielding the first num items from iter
+ */
 function take(num, iter) {
     while (num > 0) {
         yield iter.next();
@@ -146,6 +198,12 @@ function take(num, iter) {
     }
 }
 
+/**
+ * drop the first num items from iter
+ * @param num number of items to drop
+ * @param iter source iterator for items
+ * @return iterator after num items have been dropped from it
+ */
 function drop(num, iter) {
     while (num > 0) {
         iter.next();
@@ -154,6 +212,12 @@ function drop(num, iter) {
     return iter;
 }
 
+/**
+ * iterate over the last num items from iter
+ * @param num number of items to yield
+ * @param iter source of items
+ * @return an iterator that yields the last num items from iter
+ */
 function tail(num, iter) {
     let result = [];
     for (let elem in iter) {
@@ -163,6 +227,11 @@ function tail(num, iter) {
     return values(result);
 }
 
+/**
+ * give the number of items in an iterator
+ * @param iter source of items
+ * @return the number of items yielded by iter
+ */
 function length(iter) {
     let result = 0;
     try {
@@ -174,6 +243,13 @@ function length(iter) {
     return result;
 }
 
+/**
+ * reduce an iterator with a function
+ * @param iter source of items
+ * @param fun reduce function, which should take two arguments
+ * @param init starting value for the reduction
+ * @return final result of the reduction
+ */
 function reduce(iter, fun, init) {
     let result = init;
     for (let elem in iter) {
@@ -182,6 +258,10 @@ function reduce(iter, fun, init) {
     return result;
 }
 
+/**
+ * add up all the numbers yielded by the given iterator
+ * @param iter iterator yielding numbers
+ */
 function sum(iter) {
     let result = 0;
     for (let elem in iter) {
@@ -190,6 +270,10 @@ function sum(iter) {
     return result;
 }
 
+/**
+ * give the product of all the numbers yielded by the given iterator
+ * @param iter iterator yielding numbers
+ */
 function product(iter) {
     let result = 1;
     for (let elem in iter) {
@@ -198,6 +282,10 @@ function product(iter) {
     return result;
 }
 
+/**
+ * give the maximum number of all the numbers yielded by the given iterator
+ * @param iter iterator yielding numbers
+ */
 function max(iter) {
     let result = iter.next();
     for (let elem in iter) {
@@ -206,6 +294,10 @@ function max(iter) {
     return result;
 }
 
+/**
+ * give the minimum number of all the numbers yielded by the given iterator
+ * @param iter iterator yielding numbers
+ */
 function min(iter) {
     let result = iter.next();
     for (let elem in iter) {
@@ -214,6 +306,10 @@ function min(iter) {
     return result;
 }
 
+/**
+ * yield all the (own) keys from the given object
+ * @param obj object with keys to iterate over
+ */
 function keys(obj) {
     for (let x in obj) {
         if (obj.hasOwnProperty(x))
@@ -221,6 +317,10 @@ function keys(obj) {
     }
 }
 
+/**
+ * yield all the (own) values from the given object
+ * @param obj object with values to iterate over
+ */
 function values(obj) {
     for (let x in obj) {
         if (obj.hasOwnProperty(x))
@@ -228,6 +328,10 @@ function values(obj) {
     }
 }
 
+/**
+ * yield all the (own) [key, value] pairs from the given object
+ * @param obj object with key, value pairs to iterate over
+ */
 function items(obj) {
     for (let x in obj) {
         if (obj.hasOwnProperty(x))
@@ -235,12 +339,26 @@ function items(obj) {
     }
 }
 
+/**
+ * returns true if the given object is an iterator (i.e., it's an object with
+ * a next() method)
+ * @param obj object to test for iterator-ness
+ */
 function isIter(obj) {
     return ( ("object" == typeof obj)
              && ("next" in obj)
              && ("function" == typeof obj.next) );
 }
 
+/**
+ * prints out an object
+ * this has some magic for outputting (nested) iterators and it will also
+ * stringify file objects to their leaf names, and it will JSON.stringify
+ * other JS objects.  Strings get outputted directly.  Some of the magic
+ * DWIM here may change in the future.
+ * TODO: check if this is unicode-clean
+ * @param obj object to output
+ */
 function output(obj) {
     if ("string" == typeof obj) {
         print(obj);
