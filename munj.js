@@ -93,7 +93,7 @@ function _lsdir(dir, recurse) {
         entry.QueryInterface(Ci.nsIFile);
         yield entry;
         if (recurse && entry.isDirectory()) {
-            for (subEntry in _lsdir(entry, recurse))
+            for each (subEntry in _lsdir(entry, recurse))
                 yield subEntry;
         }
     }
@@ -129,7 +129,7 @@ function _expandTilde(url) {
  */
 function ila(url, sep, charSet) {
     if ("undefined" == typeof sep) sep = "\t";
-    for (let line in lines(url, charSet)) {
+    for each (let line in lines(url, charSet)) {
         yield line.split(sep);
     }
 }
@@ -145,7 +145,7 @@ function ila(url, sep, charSet) {
  */
 function oal(iter, sep) {
     if ("undefined" == typeof sep) sep = "\t";
-    for (let arr in iter) {
+    for each (let arr in iter) {
         if (arr instanceof Array)
             yield (arr.join(sep));
         else
@@ -214,7 +214,7 @@ function drop(num, iter) {
  */
 function tail(num, iter) {
     let result = [];
-    for (let elem in iter) {
+    for each (let elem in iter) {
         result.push(elem);
         if (result.length > num) result.shift();
     }
@@ -246,7 +246,7 @@ function length(iter) {
  */
 function reduce(iter, fun, init) {
     let result = init;
-    for (let elem in iter) {
+    for each (let elem in iter) {
         result = fun(result, elem);
     }
     return result;
@@ -258,7 +258,7 @@ function reduce(iter, fun, init) {
  */
 function sum(iter) {
     let result = 0;
-    for (let elem in iter) {
+    for each (let elem in iter) {
         result += parseFloat(elem);
     }
     return result;
@@ -270,7 +270,7 @@ function sum(iter) {
  */
 function product(iter) {
     let result = 1;
-    for (let elem in iter) {
+    for each (let elem in iter) {
         result *= parseFloat(elem);
     }
     return result;
@@ -282,7 +282,7 @@ function product(iter) {
  */
 function max(iter) {
     let result = iter.next();
-    for (let elem in iter) {
+    for each (let elem in iter) {
         result = Math.max(result, elem);
     }
     return result;
@@ -294,7 +294,7 @@ function max(iter) {
  */
 function min(iter) {
     let result = iter.next();
-    for (let elem in iter) {
+    for each (let elem in iter) {
         result = Math.min(result, elem);
     }
     return result;
@@ -358,7 +358,7 @@ function output(obj) {
         print(obj);
     } else if (isIter(obj)) {
         //should we do something special for nested iterators?
-        for (var elem in obj) {
+        for each (var elem in obj) {
             output(elem);
         }
     } else if (obj instanceof Ci.nsIFile) {
