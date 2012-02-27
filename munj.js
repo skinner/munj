@@ -213,12 +213,15 @@ function drop(num, iter) {
  * @return an iterator that yields the last num items from iter
  */
 function tail(num, iter) {
-    let result = [];
+    let result = new Array(num);
+    let count = 0;
     for each (let elem in iter) {
-        result.push(elem);
-        if (result.length > num) result.shift();
+        result[count % num] = elem;
+        count++;
     }
-    return values(result);
+    for (let i = Math.max(0, count - num); i < count; i++) {
+        yield result[i % num];
+    }
 }
 
 /**
