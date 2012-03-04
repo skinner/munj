@@ -225,6 +225,33 @@ function tail(num, iter) {
 }
 
 /**
+ * take a random sample of num items, without replacement, from the given
+ * iterator.
+ * (uses the reservoir sampling method named "algorithm R" in the vitter paper)
+ * @param num sample size
+ * @param iter source of items
+ * @return an iterator that yields the sampled items
+ */
+function sample(num, iter) {
+    let reservoir = [];
+    try {
+        for (let i = 0; i < num; i++)
+            reservoir.push(iter.next());
+
+        let t = num;
+
+        for each (let elem in iter) {
+            t += 1;
+            // m = random number on [0, t]
+            let m = Math.floor((t + 1) * Math.random()) | 0;
+            if (m < num) reservoir[m] = elem;
+        }                
+    } catch (e if e instanceof StopIteration) {
+    }
+    return values(reservoir);
+}
+
+/**
  * give the number of items in an iterator
  * @param iter source of items
  * @return the number of items yielded by iter
