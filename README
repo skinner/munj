@@ -64,6 +64,13 @@ $ ./munj 'product(range(1, 6))'
 $ ./munj 'reduce(function(x, y) {return x + "-" + y}, "", range(1, 6))'
 -1-2-3-4-5
 
+$ ./munj "sample(5, range(0, 100000))"
+13392
+540
+49332
+33847
+71141
+
 $ ./munj 'values([4, 8, 15, 16, 23, 42])'
 4
 8
