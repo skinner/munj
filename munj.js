@@ -143,7 +143,7 @@ function ila(url, sep, charSet) {
  * @param sep string to use to join the input arrays
  * @return iterator yielding a string for each array from the input iterator
  */
-function oal(iter, sep) {
+function oal(sep, iter) {
     if ("undefined" == typeof sep) sep = "\t";
     for each (let arr in iter) {
         if (arr instanceof Array)
@@ -274,7 +274,7 @@ function length(iter) {
  * @param init starting value for the reduction
  * @return final result of the reduction
  */
-function reduce(iter, fun, init) {
+function reduce(fun, init, iter) {
     let result = init;
     for each (let elem in iter) {
         result = fun(result, elem);
