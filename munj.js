@@ -268,6 +268,20 @@ function length(iter) {
 }
 
 /**
+ * map a function over the items from an iterator
+ * @param fun function to apply to the items
+ * @param iter the source iterator
+ * @return an iterator over the results from the function
+ */
+function map(fun, iter) {
+    try {
+        for each (let elem in iter)
+            yield fun(elem);
+    } catch (e if e instanceof StopIteration) {
+    }
+}
+
+/**
  * reduce an iterator with a function
  * @param iter source of items
  * @param fun reduce function, which should take two arguments
