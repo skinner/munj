@@ -1,5 +1,21 @@
 #!/bin/sh
-XRDIR=/usr/lib/xulrunner-2
+
+for dir in /usr/lib*/xulrunner*; do
+	if [ -e $dir/xpcshell ]; then
+		XRDIR=$dir
+	fi
+done
+
+if [ "$XRDIR" = "" ]; then
+	echo <<DONE
+        make sure xpcshell is installed
+        (e.g., by installing the xulrunner-devel package).
+        If it is installed, you may have to add the directory containing
+        xpcshell to the munj wrapper script.
+DONE
+	exit 1;
+fi
+
 MUNJDIR=`dirname "$0"`
 
 $XRDIR/run-mozilla.sh \
