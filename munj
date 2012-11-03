@@ -7,7 +7,7 @@ for dir in /usr/lib*/xulrunner*; do
 done
 
 if [ "$XRDIR" = "" ]; then
-	echo <<DONE
+	cat <<DONE
         make sure xpcshell is installed
         (e.g., by installing the xulrunner-devel package).
         If it is installed, you may have to add the directory containing
