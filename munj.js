@@ -282,6 +282,29 @@ function map(fun, iter) {
 }
 
 /**
+ * group values from the given iterator, reducing each group with the reduceFn
+ * @param groupFn takes a value from the iterator, and returns the group
+ *                that the value belongs to
+ * @param reduceFn successively reduces elements in a group to produce a result
+ * @param reduceInit starting value for the reduce function
+ * @param iter source of items
+ * @return object where the keys are the group identifiers and the values
+ *         are the results of the groupFn for each group
+ */
+function groupReduce(groupFn, reduceFn, reduceInit, iter) {
+    let result = {};
+    // stringifying and parsing reduceInit to make a fresh deep copy of
+    // reduceInit for each group
+    let initString = JSON.stringify(reduceInit)
+    for each (let elem in iter) {
+        let group = groupFn(elem);
+        if (! (group in result)) result[group] = JSON.parse(initString);
+        result[group] = reduceFn(result[group], elem);
+    }
+    return result;
+}
+
+/**
  * reduce an iterator with a function
  * @param iter source of items
  * @param fun reduce function, which should take two arguments
