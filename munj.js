@@ -14,6 +14,47 @@ let ioService = Cc["@mozilla.org/network/io-service;1"]
  * @return an iterator over the lines in the file
  */
 function lines(toRead, charSet) {
+    var convStream;
+    try {
+        convStream = _cstreamFrom(toRead, charSet);
+        convStream.QueryInterface(Ci.nsIUnicharLineInputStream);
+
+        if (convStream instanceof Ci.nsIUnicharLineInputStream) {
+            var line = {};
+            var cont;
+            do {
+                cont = convStream.readLine(line);
+                yield line.value;
+            } while (cont);
+        }
+    } finally {
+        if (convStream) convStream.close();
+    }
+}
+
+function readString(toRead, charSet) {
+    var data = "";
+    var convStream;
+    try {
+        convStream = _cstreamFrom(toRead, charSet);
+
+        let (str = {}) {
+            let read = 0;
+            do {
+                 // read as much as we can and put it in str.value
+                read = convStream.readString(0xffffffff, str);
+                data += str.value;
+            } while (read != 0);
+        }
+
+    } finally {
+        if (convStream) convStream.close();
+    }
+
+    return data;
+}
+
+function _cstreamFrom(toRead, charSet) {
     if ('undefined' == typeof charSet) charSet = "UTF-8";
 
     let convStream = Cc["@mozilla.org/intl/converter-input-stream;1"]
@@ -25,7 +66,7 @@ function lines(toRead, charSet) {
     } else if (toRead instanceof Ci.nsIFile) {
         url = ioService.newFileURI(toRead);
     } else {
-        throw new Error("lines(): couldn't handle argument: " + toRead);
+        throw new Error("couldn't handle input source: " + toRead);
     }
 
     //TODO figure out how to get stdin
@@ -39,21 +80,12 @@ function lines(toRead, charSet) {
     //when could we use this?
     //print(input.contentCharset);
 
-    try {
-        convStream.init(input, charSet, 1024, 0xFFFD);
-        convStream.QueryInterface(Ci.nsIUnicharLineInputStream);
+    convStream.init(input, charSet, 1024, 0xFFFD);
+    return convStream;
+}
 
-        if (convStream instanceof Ci.nsIUnicharLineInputStream) {
-            var line = {};
-            var cont;
-            do {
-                cont = convStream.readLine(line);
-                yield line.value;
-            } while (cont);
-        }
-    } finally {
-        input.close();
-    }
+function readJSON(toRead) {
+    return JSON.parse(readString(toRead, "UTF-8"));
 }
 
 /**
