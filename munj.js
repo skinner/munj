@@ -300,6 +300,44 @@ function length(iter) {
 }
 
 /**
+ * concatenate multiple iterators
+ * @param one or more iterators
+ * @return iterator that returns the items from the given iterators, 
+ *         going through all the elements of the first argument, then
+ *         all the elements of the second, and so on
+ */
+function concat() {
+    for (var i = 0; i < arguments.length; i++) {
+        for each (let item in arguments[i]) {
+            yield item;
+        }
+    }
+}
+
+/**
+ * interleave values from multiple iterators
+ * @param one or more iterators
+ * @return iterator that returns the first item from the first argument, then
+ *         the first item from the second argument, and so on for each argument,
+ *         then the second item from the first argument, etc.
+ */
+function interleave() {
+    var args = Array.prototype.slice.call(arguments, 0);
+    while (true) {
+        for (var i = 0; i < args.length; i++) {
+            try {
+                yield args[i].next();
+            } catch (e if e instanceof StopIteration) {
+                // this is fiddly, but is there a better way?
+                args.splice(i, 1);
+                if (0 == args.length) throw StopIteration;
+                i -= 1;
+            }
+        }
+    }
+}
+
+/**
  * map a function over the items from an iterator
  * @param fun function to apply to the items
  * @param iter the source iterator
