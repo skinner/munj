@@ -390,10 +390,8 @@ function flatten(iter) {
  * @return an iterator over the results from the function
  */
 function map(fun, iter) {
-    try {
-        for each (let elem in iter)
-            yield fun(elem);
-    } catch (e if e instanceof StopIteration) {
+    for each (let elem in iter) {
+        yield fun(elem);
     }
 }
 
