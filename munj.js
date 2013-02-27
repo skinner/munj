@@ -32,7 +32,7 @@ function lines(toRead, charSet) {
     }
 }
 
-function readString(toRead, charSet) {
+function getString(toRead, charSet) {
     var data = "";
     var convStream;
     try {
@@ -84,8 +84,8 @@ function _cstreamFrom(toRead, charSet) {
     return convStream;
 }
 
-function readJSON(toRead) {
-    return JSON.parse(readString(toRead, "UTF-8"));
+function getJson(toRead) {
+    return JSON.parse(getString(toRead, "UTF-8"));
 }
 
 /**
