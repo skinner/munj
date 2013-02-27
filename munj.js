@@ -338,6 +338,34 @@ function interleave() {
 }
 
 /**
+ * zip together items from the multiple generators
+ * @param one or more iterators
+ * @return iterator that generates arrays; the length of each array is the
+ *         number of arguments to zip; each array contains one element
+ *         from each of the given iterators, or null if one or more
+ *         of the given iterators has stopped
+ */
+function zip() {
+    var args = Array.prototype.slice.call(arguments, 0);
+    var liveIters = args.length;
+    var item;
+    while (true) {
+        item = new Array(args.length);
+        for (var i = 0; i < args.length; i++) {
+            if (args[i] == null) continue;
+            try {
+                item[i] = args[i].next()
+            } catch (e if e instanceof StopIteration) {
+                args[i] = null;
+                liveIters--;
+                if (0 == liveIters) throw StopIteration;
+            }
+        }
+        yield item;
+    }
+}    
+
+/**
  * map a function over the items from an iterator
  * @param fun function to apply to the items
  * @param iter the source iterator
