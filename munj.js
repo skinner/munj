@@ -518,19 +518,27 @@ function isIter(obj) {
  * TODO: check if this is unicode-clean
  * @param obj object to output
  */
-function output(obj) {
+function output(obj, prefix) {
+    if (prefix === undefined) prefix = "";
     if ("string" == typeof obj) {
-        print(obj);
+        dump(prefix + '"' + obj + '"');
     } else if (isIter(obj)) {
-        //should we do something special for nested iterators?
-        for each (var elem in obj) {
-            output(elem);
+        dump(prefix + "[\n");
+        try {
+            output(obj.next(), prefix + "  ");
+        } catch (e if e instanceof StopIteration) {
         }
+        for each (var elem in obj) {
+            dump(",\n");
+            output(elem, prefix + "  ");
+        }
+        dump("\n" + prefix + "]");
     } else if (obj instanceof Ci.nsIFile) {
-        print(obj.leafName);
+        dump(prefix + '"' + obj.leafName + '"');
     } else {
-        print(JSON.stringify(obj));
+        dump(prefix + JSON.stringify(obj));
     }
 }
 
 output(eval(arguments[0]));
+dump("\n");
