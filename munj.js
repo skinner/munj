@@ -111,8 +111,9 @@ function _ls(path, recurse) {
     let uri = _resolve(path);
     let f = uri.QueryInterface(Ci.nsIFileURL).file;
     if (f.isDirectory()) {
-        for each (let entry in _lsdir(f, recurse))
-            yield entry;
+        for each (subEntry in _lsdir(f, recurse)) {
+             yield subEntry;
+        }
     } else {
         yield f;
     }
@@ -125,12 +126,10 @@ function _lsdir(dir, recurse) {
         entry.QueryInterface(Ci.nsIFile);
         yield entry;
         if (recurse && entry.isDirectory()) {
-            for each (subEntry in _lsdir(entry, recurse))
-                yield subEntry;
+            yield _lsdir(entry, recurse);
         }
     }
 }    
-    
 
 /** our custom path/url resolution function which resolves relative to
  *  the current working directory, and does tilde expansion
@@ -364,6 +363,25 @@ function zip() {
         yield item;
     }
 }    
+
+/**
+ * flatten any nesting from an iterator
+ * @param iter an iterator, the items from which may themselves be iterators
+ * @return an iterator over items from the given iterator, which recursively
+ *         yields items from any nested iterator.  Items from the returned
+ *         iterator will not themselves be iterators.
+ */
+function flatten(iter) {
+    for each (let item in iter) {
+        if (isIter(item)) {
+            for each (subItem in flatten(item)) {
+                yield subItem
+            }
+        } else {
+            yield item;
+        }
+    }
+}
 
 /**
  * map a function over the items from an iterator
