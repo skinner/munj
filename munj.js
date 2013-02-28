@@ -365,6 +365,35 @@ function zip() {
 }    
 
 /**
+ * zip together items from the multiple generators, using the given function
+ * @param a function that takes as many arguments as there are given iterators
+ * @param one or more iterators
+ * @return iterator that returns the results of calling the given function
+ *         on the values from the given iterators
+ */
+function zipWith() {
+    var args = Array.prototype.slice.call(arguments, 0);
+    var fun = args.shift();
+    var liveIters = args.length;
+    var item;
+    while (true) {
+        items = new Array(args.length);
+        for (var i = 0; i < args.length; i++) {
+            if (args[i] == null) continue;
+            try {
+                items[i] = args[i].next()
+            } catch (e if e instanceof StopIteration) {
+                args[i] = null;
+                liveIters--;
+                if (0 == liveIters) throw StopIteration;
+            }
+        }
+        // don't know what a useful "thisArg" might be here
+        yield fun.apply(items, items);
+    }
+}
+
+/**
  * flatten any nesting from an iterator
  * @param iter an iterator, the items from which may themselves be iterators
  * @return an iterator over items from the given iterator, which recursively
