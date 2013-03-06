@@ -160,7 +160,7 @@ function _expandTilde(url) {
  */
 function ila(url, sep, charSet) {
     if ("undefined" == typeof sep) sep = "\t";
-    for each (let line in lines(url, charSet)) {
+    for (let line of lines(url, charSet)) {
         yield line.split(sep);
     }
 }
@@ -176,7 +176,7 @@ function ila(url, sep, charSet) {
  */
 function oal(sep, iter) {
     if ("undefined" == typeof sep) sep = "\t";
-    for each (let arr in iter) {
+    for (let arr of iter) {
         if (arr instanceof Array)
             yield (arr.join(sep));
         else
@@ -224,15 +224,32 @@ function take(num, iter) {
 }
 
 /**
+ * iterate over the items from the given iterator as long as pred is truthy
+ * @param pred function that returns false to stop iterating, and true otherwise
+ * @param iter source iterator
+ * @return iterator that yields items from iter until pred is falsy for an item
+ */
+function takeWhile(pred, iter) {
+    while (true) {
+        var item = iter.next();
+        if (! pred(item)) throw StopIteration;
+        yield item
+    }
+}
+
+/**
  * drop the first num items from iter
  * @param num number of items to drop
  * @param iter source iterator for items
  * @return iterator after num items have been dropped from it
  */
 function drop(num, iter) {
-    while (num > 0) {
-        iter.next();
-        num--;
+    try {
+        while (num > 0) {
+            iter.next();
+            num--;
+        }
+    } catch (e if e instanceof StopIteration) {
     }
     return iter;
 }
@@ -246,13 +263,25 @@ function drop(num, iter) {
 function tail(num, iter) {
     let result = new Array(num);
     let count = 0;
-    for each (let elem in iter) {
+    for (let elem of iter) {
         result[count % num] = elem;
         count++;
     }
     for (let i = Math.max(0, count - num); i < count; i++) {
         yield result[i % num];
     }
+}
+
+/**
+ * filter a given iterator for items matching a condition
+ * (there is already syntax for this in generator expressions; this function
+ *  exists in case this form is more convenient)
+ * @param pred function that returns true for items that should pass the filter
+ * @param iter source iterator
+ * @return an iterator over the items that passed the filter
+ */
+function filter(pred, iter) {
+    return (x for (x of iter) if (pred(x)));
 }
 
 /**
@@ -271,7 +300,7 @@ function sample(num, iter) {
 
         let t = num;
 
-        for each (let elem in iter) {
+        for (let elem of iter) {
             t += 1;
             // m = random number on [0, t]
             let m = Math.floor((t + 1) * Math.random()) | 0;
@@ -299,6 +328,19 @@ function length(iter) {
 }
 
 /**
+ * repeat the given value the n times, or forever if n is omitted
+ * @param value the value to repeat
+ * @param n the number of times to repeat the value (if omitted, will repeat
+ *        forever)
+ * @return iterator that yields the value repeatedly
+ */
+function repeat(value, n) {
+    if (n === undefined) n = -1;
+    for (var i = 0; i < n; i++) {
+        yield value;
+    }
+}
+/**
  * concatenate multiple iterators
  * @param one or more iterators
  * @return iterator that returns the items from the given iterators, 
@@ -307,7 +349,7 @@ function length(iter) {
  */
 function concat() {
     for (var i = 0; i < arguments.length; i++) {
-        for each (let item in arguments[i]) {
+        for (let item of arguments[i]) {
             yield item;
         }
     }
@@ -362,7 +404,7 @@ function zip() {
         }
         yield item;
     }
-}    
+}
 
 /**
  * zip together items from the multiple generators, using the given function
@@ -401,9 +443,9 @@ function zipWith() {
  *         iterator will not themselves be iterators.
  */
 function flatten(iter) {
-    for each (let item in iter) {
+    for (let item of iter) {
         if (isIter(item)) {
-            for each (subItem in flatten(item)) {
+            for (let subItem of flatten(item)) {
                 yield subItem
             }
         } else {
@@ -419,7 +461,7 @@ function flatten(iter) {
  * @return an iterator over the results from the function
  */
 function map(fun, iter) {
-    for each (let elem in iter) {
+    for (let elem of iter) {
         yield fun(elem);
     }
 }
@@ -439,7 +481,7 @@ function groupReduce(groupFn, reduceFn, reduceInit, iter) {
     // stringifying and parsing reduceInit to make a fresh deep copy of
     // reduceInit for each group
     let initString = JSON.stringify(reduceInit)
-    for each (let elem in iter) {
+    for (let elem of iter) {
         let group = groupFn(elem);
         if (! (group in result)) result[group] = JSON.parse(initString);
         result[group] = reduceFn(result[group], elem);
@@ -456,7 +498,7 @@ function groupReduce(groupFn, reduceFn, reduceInit, iter) {
  */
 function reduce(fun, init, iter) {
     let result = init;
-    for each (let elem in iter) {
+    for (let elem of iter) {
         result = fun(result, elem);
     }
     return result;
@@ -468,7 +510,7 @@ function reduce(fun, init, iter) {
  */
 function sum(iter) {
     let result = 0;
-    for each (let elem in iter) {
+    for (let elem of iter) {
         result += parseFloat(elem);
     }
     return result;
@@ -480,7 +522,7 @@ function sum(iter) {
  */
 function product(iter) {
     let result = 1;
-    for each (let elem in iter) {
+    for (let elem of iter) {
         result *= parseFloat(elem);
     }
     return result;
@@ -492,7 +534,7 @@ function product(iter) {
  */
 function max(iter) {
     let result = iter.next();
-    for each (let elem in iter) {
+    for (let elem of iter) {
         result = Math.max(result, elem);
     }
     return result;
@@ -504,7 +546,7 @@ function max(iter) {
  */
 function min(iter) {
     let result = iter.next();
-    for each (let elem in iter) {
+    for (let elem of iter) {
         result = Math.min(result, elem);
     }
     return result;
@@ -585,5 +627,8 @@ function output(obj, prefix) {
     }
 }
 
-output(eval(arguments[0]));
-dump("\n");
+var result = eval(arguments[0]);
+if (result !== undefined) {
+    output(result);
+    dump("\n");
+}
