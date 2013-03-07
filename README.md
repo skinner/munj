@@ -1,14 +1,29 @@
 munj - streaming data munging using javascript generators
 ---------------------------------------------------------
 
-The command line has always used ad-hoc iteration protocols.  How many times have you done something like
+The command line has always used ad-hoc iteration protocols.  How many
+times have you done something like
+
     for x in *; do du -s $x; done
-only to realize that you have a file with a space in it?  Then you have to do something much more cumbersome, e.g.:
+
+only to realize that you have a file with a space in it?  Then you
+have to do something much more cumbersome, e.g.:
+
     find -mindepth 1 -maxdepth 1 -print0 | xargs -0 du -s
 
-Or have you ever tried to process a tab-delimited file, only to find that one of the columns can contain tab characters?
 
-The problem is that item boundaries are signaled in-band, often without escaping.  The solution is to use a generic syntax with proper escaping rules.  Like JSON, for example.  Or to use an out-of-band iteration protocol, like javascript iterators/generators.  Javascript is also the natural way to process JSON.  munj is a prototype for using javascript iterators/generators to do command-line data munging.
+Or have you ever tried to process a tab-delimited file, only to find
+that one of the columns can contain tab characters?
+
+The problem is that item boundaries are signaled in-band, often
+without escaping.  The solution is to use a generic syntax with proper
+escaping rules.  Like JSON, for example.  Or to use an out-of-band
+iteration protocol, like javascript iterators/generators.  Javascript
+is also the natural way to process JSON.  munj is a prototype for
+using javascript iterators/generators to do command-line data munging.
+
+Examples
+--------
 
     $ ./munj 'lines("test/delim.txt")'
     [
