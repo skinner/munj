@@ -6,7 +6,7 @@ times have you done something like
 
     for x in *; do du -s $x; done
 
-only to realize that you have a file with a space in it?  Then you
+only to realize that you have a directory name with a space in it?  Then you
 have to do something much more cumbersome, e.g.:
 
     find -mindepth 1 -maxdepth 1 -print0 | xargs -0 du -s
@@ -89,7 +89,8 @@ Examples
       [null,null,13]
     ]
     
-    $ ./munj 'concat(range(1, 3), range(6, 8))'[
+    $ ./munj 'concat(range(1, 3), range(6, 8))'
+    [
       1,
       2,
       6,
